@@ -4,10 +4,6 @@ INVENTORY_FILE = "inventory.txt"
 
 
 def load_inventory(filename=INVENTORY_FILE):
-    """
-    Reads previously saved transaction history from file at startup.
-    If the file does not exist, starts with an empty history.
-    """
     transactions = []
     if os.path.exists(filename):
         try:
@@ -50,8 +46,9 @@ def calculate_tax(amount):
     return amount * 0.10
 
 
-def generate_report(total_units, failed_attempts, total_tax, deliveries_count):
+def generate_report(total_units, failed_attempts, total_tax, deliveries_count, history):
     print("\n--- Summary Report ---")
+    print(f"Transaction History (List): {history}")
     print(f"Total Deliveries Processed: {deliveries_count}")
     print(f"Total Units Processed: {total_units}")
     print(f"Total Tax Calculated (10%): {total_tax:.2f}")
@@ -59,10 +56,8 @@ def generate_report(total_units, failed_attempts, total_tax, deliveries_count):
 
 
 def main():
-    # Load previously stored history
     history = load_inventory()
-    print(f"Loaded existing items from file: {history}")
-
+    
     total_inventory = sum(history)
     failed_entries = 0
     total_tax = sum(calculate_tax(x) for x in history)
@@ -75,6 +70,9 @@ def main():
         if result == "quit":
             break
 
+        # Append new transaction to list
+        history.append(result)
+
         total_inventory = process_delivery(total_inventory, result)
         tax_for_delivery = calculate_tax(result)
         total_tax += tax_for_delivery
@@ -84,7 +82,7 @@ def main():
             print("OVERSTOCK ALERT: Inventory has reached/exceeded 500 units!")
             break
 
-    generate_report(total_inventory, failed_entries, total_tax, deliveries_processed)
+    generate_report(total_inventory, failed_entries, total_tax, deliveries_processed, history)
 
 
 if __name__ == "__main__":
