@@ -4,6 +4,10 @@ INVENTORY_FILE = "inventory.txt"
 
 
 def load_inventory(filename=INVENTORY_FILE):
+    """
+    Reads previously saved transaction history from file at startup.
+    If the file does not exist, starts with an empty history.
+    """
     transactions = []
     if os.path.exists(filename):
         try:
@@ -19,18 +23,22 @@ def load_inventory(filename=INVENTORY_FILE):
 
 def save_inventory(transactions, filename=INVENTORY_FILE):
     """
-    Writes all entries from the transaction history list to inventory.txt.
+    Writes the transaction history list and total to inventory.txt upon exit.
     """
     try:
         with open(filename, "w") as f:
             for amount in transactions:
                 f.write(f"{amount}\n")
-        print(f"Inventory successfully saved to {filename}")
+        print(f"\nData successfully saved to {filename}")
     except Exception as e:
         print(f"Error saving data to file: {e}")
 
 
 def get_valid_input():
+    """
+    Handles prompt, input validation, and returns a valid integer or 'quit'.
+    Tracks failed entries internally until a valid entry or 'quit' is provided.
+    """
     failed_in_prompt = 0
     while True:
         user_input = input("Enter stock quantity (or type 'quit' to exit): ").strip()
@@ -52,16 +60,19 @@ def get_valid_input():
 
 
 def process_delivery(current_total, new_value):
+    """Calculates the new total inventory and returns it."""
     return current_total + new_value
 
 
 def calculate_tax(amount):
+    """Calculates 10% tax for a specific delivery amount."""
     return amount * 0.10
 
 
 def generate_report(total_units, failed_attempts, total_tax, deliveries_count, history):
+    """Prints the final summary report including transaction history."""
     print("\n--- Summary Report ---")
-    print(f"Transaction History (List): {history}")
+    print(f"Transaction History: {history}")
     print(f"Total Deliveries Processed: {deliveries_count}")
     print(f"Total Units Processed: {total_units}")
     print(f"Total Tax Calculated (10%): {total_tax:.2f}")
@@ -69,12 +80,16 @@ def generate_report(total_units, failed_attempts, total_tax, deliveries_count, h
 
 
 def main():
+    # 1. Load initial data from persistence layer
     history = load_inventory()
     
     total_inventory = sum(history)
     failed_entries = 0
-    total_tax = sum(calculate_tax(x) for x in history)
+    total_tax = sum(calculate_tax(val) for val in history)
     deliveries_processed = len(history)
+
+    if history:
+        print(f"Loaded existing history from {INVENTORY_FILE}. Initial stock: {total_inventory} units.")
 
     while True:
         result, failed_count = get_valid_input()
@@ -83,19 +98,24 @@ def main():
         if result == "quit":
             break
 
+        # 2. Track history in memory
         history.append(result)
 
+        # Process valid delivery
         total_inventory = process_delivery(total_inventory, result)
         tax_for_delivery = calculate_tax(result)
         total_tax += tax_for_delivery
         deliveries_processed += 1
 
+        # Check for overstock limit
         if total_inventory >= 500:
             print("OVERSTOCK ALERT: Inventory has reached/exceeded 500 units!")
             break
 
-    # Save data before exiting
+    # 3. Save state to file on completion
     save_inventory(history)
+
+    # 4. Display final report
     generate_report(total_inventory, failed_entries, total_tax, deliveries_processed, history)
 
 
