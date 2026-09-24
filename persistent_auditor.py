@@ -17,6 +17,19 @@ def load_inventory(filename=INVENTORY_FILE):
     return transactions
 
 
+def save_inventory(transactions, filename=INVENTORY_FILE):
+    """
+    Writes all entries from the transaction history list to inventory.txt.
+    """
+    try:
+        with open(filename, "w") as f:
+            for amount in transactions:
+                f.write(f"{amount}\n")
+        print(f"Inventory successfully saved to {filename}")
+    except Exception as e:
+        print(f"Error saving data to file: {e}")
+
+
 def get_valid_input():
     failed_in_prompt = 0
     while True:
@@ -70,7 +83,6 @@ def main():
         if result == "quit":
             break
 
-        # Append new transaction to list
         history.append(result)
 
         total_inventory = process_delivery(total_inventory, result)
@@ -82,6 +94,8 @@ def main():
             print("OVERSTOCK ALERT: Inventory has reached/exceeded 500 units!")
             break
 
+    # Save data before exiting
+    save_inventory(history)
     generate_report(total_inventory, failed_entries, total_tax, deliveries_processed, history)
 
 
