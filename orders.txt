@@ -1,0 +1,4 @@
+1001,ipad,10
+1002,mouse,50
+1003,iphone,460
+1004,samsung,400
