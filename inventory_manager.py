@@ -47,6 +47,17 @@ def display_all(inventory):
             )
     print("--------------------------------------------------\n")
 
+#--------------------------------------
+# Save Inventory Function
+#--------------------------------------
+def save_inventory(inventory, filename=FILENAME):
+    """Saves inventory list back to inventory.json."""
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(inventory, f, indent=4)
+        print("Inventory saved successfully to inventory.json.\n")
+    except Exception as e:
+        print(f"Error saving to {filename}: {e}\n")
 
 #-------------------------------------
 # Auto-generate Product ID Function
