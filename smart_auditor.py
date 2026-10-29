@@ -128,7 +128,98 @@ class Inventory:
         self._products = [Product.from_dict(item) for item in raw_data]
 
 
+# --------------------------------------
+# File Handling Functions
+# --------------------------------------
+def load_inventory(filename=FILENAME) -> Inventory:
+    """Loads inventory data from inventory.json into an Inventory instance."""
+    inv = Inventory()
+    if os.path.exists(filename):
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                raw_data = json.load(f)
+                inv.load_from_list_of_dicts(raw_data)
+                print(f"{filename} found.")
+                print("Inventory loaded successfully.\n")
+                return inv
+        except Exception as e:
+            print(f"Error loading {filename}: {e}\n")
 
+    # Initial default products if inventory.json is missing/unusable
+    default_items = [
+        {"id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15},
+        {"id": "P002", "name": "Mouse", "price": 25.50, "stock": 40},
+        {"id": "P003", "name": "Keyboard", "price": 45.00, "stock": 25},
+    ]
+    inv.load_from_list_of_dicts(default_items)
+    return inv
+
+
+def save_inventory(inventory: Inventory, filename=FILENAME) -> None:
+    """Saves the inventory collection to inventory.json."""
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(inventory.to_list_of_dicts(), f, indent=4)
+        print("Inventory saved successfully to inventory.json.\n")
+    except Exception as e:
+        print(f"Error saving to {filename}: {e}\n")
+
+
+# --------------------------------------
+# User Interface & Interaction Logic
+# --------------------------------------
+def handle_add_product(inventory: Inventory) -> None:
+    """Handles CLI user interaction for adding a product."""
+    print("\nAdd New Product")
+    next_id = inventory.get_next_product_id()
+    print(f"Product ID: {next_id}")
+
+    name = input("Product Name: ").strip()
+    try:
+        price = float(input("Price: ").strip())
+        stock = int(input("Stock Quantity: ").strip())
+    except ValueError:
+        print("Invalid input for price or stock quantity. Add product canceled.\n")
+        return
+
+    new_prod = Product(next_id, name, price, stock)
+    inventory.add_product(new_prod)
+    print("\nProduct added successfully!\n")
+
+
+def handle_update_stock(inventory: Inventory) -> None:
+    """Handles CLI user interaction for updating stock."""
+    print("\nUpdate Stock")
+    prod_id = input("Enter Product ID: ").strip()
+
+    prod = inventory.search_product(prod_id)
+    if prod:
+        print("\nProduct Found:")
+        print(f"Name: {prod.name}")
+        print(f"Current Stock: {prod.stock}\n")
+        try:
+            new_stock = int(input("New Stock Quantity: ").strip())
+            prod.update_stock(new_stock)
+            print("\nStock updated successfully!\n")
+        except ValueError as e:
+            print(f"Invalid input: {e}\n")
+    else:
+        print("Product not found.\n")
+
+
+def handle_search_product(inventory: Inventory) -> None:
+    """Handles CLI user interaction for searching a product."""
+    print("\nSearch Product")
+    prod_id = input("Enter Product ID: ").strip()
+
+    prod = inventory.search_product(prod_id)
+    if prod:
+        print("\nProduct Found")
+        print("--------------------------------------------------")
+        prod.display_information()
+        print("--------------------------------------------------\n")
+    else:
+        print("Product not found.\n")
 
 
 def display_menu() -> None:
