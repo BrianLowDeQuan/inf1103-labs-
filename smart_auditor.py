@@ -36,6 +36,98 @@ class Product:
     def stock(self) -> int:
         return self._stock
 
+    # Encapsulated state management
+    def update_stock(self, new_stock: int) -> None:
+        """Updates the stock quantity internally."""
+        if new_stock < 0:
+            raise ValueError("Stock quantity cannot be negative.")
+        self._stock = new_stock
+
+    def display_information(self) -> None:
+        """Displays formatted product details."""
+        print(f"ID: {self._product_id}")
+        print(f"Name: {self._name}")
+        print(f"Price: ${self._price:.2f}")
+        print(f"Stock: {self._stock}")
+
+    def to_dict(self) -> dict:
+        """Converts Product object back to dictionary for JSON serialization."""
+        return {
+            "id": self._product_id,
+            "name": self._name,
+            "price": self._price,
+            "stock": self._stock,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Factory method to instantiate a Product from a dictionary."""
+        return cls(
+            product_id=data["id"],
+            name=data["name"],
+            price=float(data["price"]),
+            stock=int(data["stock"]),
+        )
+
+
+# --------------------------------------
+# Inventory Class
+# --------------------------------------
+class Inventory:
+    """
+    Manages a collection of Product objects.
+    Provides operational methods to add, search, and display products.
+    """
+
+    def __init__(self):
+        self._products: list[Product] = []
+
+    def add_product(self, product: Product) -> None:
+        """Adds a Product instance to the collection."""
+        self._products.append(product)
+
+    def search_product(self, product_id: str) -> Product | None:
+        """Searches for a product by its ID (case-insensitive)."""
+        target_id = product_id.upper()
+        for prod in self._products:
+            if prod.product_id.upper() == target_id:
+                return prod
+        return None
+
+    def display_all(self) -> None:
+        """Displays all products in the inventory."""
+        print("\nCurrent Inventory")
+        print("--------------------------------------------------")
+        if not self._products:
+            print("No items in inventory.")
+        else:
+            for prod in self._products:
+                print(
+                    f"ID: {prod.product_id} | Name: {prod.name} | "
+                    f"Price: ${prod.price:.2f} | Stock: {prod.stock}"
+                )
+        print("--------------------------------------------------\n")
+
+    def get_next_product_id(self) -> str:
+        """Generates the next auto-incrementing Product ID (e.g., P004)."""
+        max_id_num = 0
+        for prod in self._products:
+            item_id = prod.product_id
+            if item_id.startswith("P") and item_id[1:].isdigit():
+                num = int(item_id[1:])
+                if num > max_id_num:
+                    max_id_num = num
+        return f"P{max_id_num + 1:03d}"
+
+    def to_list_of_dicts(self) -> list[dict]:
+        """Converts all products to dictionaries for JSON export."""
+        return [prod.to_dict() for prod in self._products]
+
+    def load_from_list_of_dicts(self, raw_data: list[dict]) -> None:
+        """Populates inventory from loaded raw dictionary data."""
+        self._products = [Product.from_dict(item) for item in raw_data]
+
+
 
 
 
