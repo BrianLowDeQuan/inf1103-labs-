@@ -1,31 +1,36 @@
 import json
 import os
 from inventory import Inventory
+from models.supplier import Supplier
+from models.product import Product, PhysicalProduct, DigitalProduct
 
 FILENAME = "inventory.json"
 
-def load_inventory(filename=FILENAME) -> Inventory:
-    inv = Inventory()
+def load_inventory(filename: str = FILENAME) -> tuple[Inventory, dict[str, Supplier]]:
+    inv = Inventory("Primary Inventory")
+    suppliers: dict[str, Supplier] = {}
+
     if os.path.exists(filename):
         try:
             with open(filename, "r", encoding="utf-8") as f:
                 raw_data = json.load(f)
-                inv.load_from_list_of_dicts(raw_data)
-                print(f"{filename} found.")
-                print("Inventory loaded successfully.\n")
-                return inv
+                inv.products = [Product.from_dict(item, suppliers) for item in raw_data]
+                print(f"{filename} found. Inventory loaded successfully.\n")
+                return inv, suppliers
         except Exception as e:
             print(f"Error loading {filename}: {e}\n")
 
-    default_items = [
-        {"type": "physical", "id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15, "weight": 2.2},
-        {"type": "physical", "id": "P002", "name": "Mouse", "price": 25.50, "stock": 40, "weight": 0.15},
-        {"type": "digital", "id": "P003", "name": "Antivirus License", "price": 45.00, "stock": 99, "download_size": 250.0},
-    ]
-    inv.load_from_list_of_dicts(default_items)
-    return inv
+    s1 = Supplier("S001", "TechDistributors Pte Ltd", "sales@techdist.sg")
+    s2 = Supplier("S002", "CyberSoft Global", "licensing@cybersoft.io")
+    suppliers[s1.supplier_id] = s1
+    suppliers[s2.supplier_id] = s2
 
-def save_inventory(inventory: Inventory, filename=FILENAME) -> None:
+    inv.add_product(PhysicalProduct("P001", "Laptop", 1200.00, 15, s1, 2.2))
+    inv.add_product(PhysicalProduct("P002", "Mouse", 25.50, 40, s1, 0.15))
+    inv.add_product(DigitalProduct("P003", "Antivirus License", 45.00, 99, s2, 250.0))
+    return inv, suppliers
+
+def save_inventory(inventory: Inventory, filename: str = FILENAME) -> None:
     try:
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(inventory.to_list_of_dicts(), f, indent=4)
